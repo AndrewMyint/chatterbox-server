@@ -75,6 +75,24 @@ describe('Node Server Request Listener Function', function() {
     expect(res._ended).to.equal(true);
   });
 
+  it('Should send an object containing an `objectId` and `createdAt` properties', function () {
+    var stubMsg = {
+      username: 'Jono',
+      text: 'Do my bidding!'
+    };
+
+    var req = new stubs.request('/classes/messages', 'POST', stubMsg);
+    var res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    var parsedBody = JSON.parse(res._data);
+    expect(parsedBody).to.be.an('object');
+    expect(parsedBody).to.have.property('objectId');
+    expect(parsedBody).to.have.property('createdAt');
+    expect(res._ended).to.equal(true);
+  });
+
   it('Should respond with messages that were previously posted', function() {
     var stubMsg = {
       username: 'Jono',
@@ -116,4 +134,30 @@ describe('Node Server Request Listener Function', function() {
       });
   });
 
+  it('Should 405 when asked for a nonexistent method', function() {
+    var req = new stubs.request('/classes/messages', 'DELETE');
+    var res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    // Wait for response to return and then check status code
+    waitForThen(
+      function() { return res._ended; },
+      function() {
+        expect(res._responseCode).to.equal(405);
+      });
+  });
+
+  it('Should respond with 413 if the posted message is very large', function () {
+    var stubMsg = {
+      username: 'Jono',
+      text: stubs.randomLargeEntity
+    };
+    var req = new stubs.request('/classes/messages', 'POST', stubMsg);
+    var res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    expect(res._responseCode).to.equal(201);
+  });
 });

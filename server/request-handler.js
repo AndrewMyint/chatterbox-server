@@ -45,31 +45,32 @@ var handleRequest = function (request, response) {
   };
 
   var headers;
-  var statusCode;
 
   if (request.method === 'OPTIONS') {
-    statusCode = 200;
-
     headers = defaultCorsHeaders;
 
     headers['Content-Type'] = 'text/json';
 
-    response.writeHead(statusCode, headers);
+    response.writeHead(200, headers);
 
     response.end();
   } else if (request.method === 'GET') {
     if (request.url === '/classes/messages') {
-      // Deal with the request.
-      statusCode = 200;
-
       headers = defaultCorsHeaders;
 
       headers['Content-Type'] = 'text/json';
 
-      response.writeHead(statusCode, headers);
+      response.writeHead(200, headers);
 
       // We should respond with the messages.
       response.end(JSON.stringify(messages));
+    } else {
+      headers = defaultCorsHeaders;
+
+      headers['Content-Type'] = 'text/plain';
+
+      response.writeHead(404, headers);
+      response.end('This webpage doesn\'t exist');
     }
   } else if (request.method === 'POST') {
     var requestBody = '';
@@ -80,9 +81,9 @@ var handleRequest = function (request, response) {
       messages.results.unshift(JSON.parse(data));
 
       if (requestBody.length > 1e7) {
-        response.writeHead(413, 'Request Entity Too Large', {'Content-Type': 'text/html'});
+        response.writeHead(413, {'Content-Type': 'text/plain'});
 
-        response.end('<!doctype html><html><head><title>413</title></head><body>413: Request Entity Too Large</body></html>');
+        response.end('Request Entity Too Large');
       }
     });
 
@@ -97,11 +98,14 @@ var handleRequest = function (request, response) {
 
       var responseObject = {
         objectId: objectId,
-        createAt: new Date()
+        createdAt: new Date()
       };
 
       response.end(JSON.stringify(responseObject));
     });
+  } else {
+    response.writeHead(405, {'Content-Type': 'text/plain'});
+    response.end('Request method not existed');
   }
 };
 
