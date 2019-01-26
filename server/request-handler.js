@@ -11,6 +11,9 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var qs = require('querystring');
+
+var objectId = 0;
 
 var messages = {
   results: [
@@ -34,29 +37,72 @@ var handleRequest = function (request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  var defaultCorsHeaders = {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'access-control-allow-headers': 'content-type, accept',
+    'access-control-max-age': 10 // Seconds.
+  };
 
-  if (request.url === '/classes/messages') {
-    // Deal with the request.
-    var statusCode = 200;
+  var headers;
+  var statusCode;
 
-    var defaultCorsHeaders = {
-      'access-control-allow-origin': '*',
-      'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'access-control-allow-headers': 'content-type, accept',
-      'access-control-max-age': 10 // Seconds.
-    };
+  if (request.method === 'OPTIONS') {
+    statusCode = 200;
 
-    var headers = defaultCorsHeaders;
+    headers = defaultCorsHeaders;
 
     headers['Content-Type'] = 'text/json';
 
     response.writeHead(statusCode, headers);
 
-    // We should respond with the messages.
-    response.end(JSON.stringify(messages));
+    response.end();
+  } else if (request.method === 'GET') {
+    if (request.url === '/classes/messages') {
+      // Deal with the request.
+      statusCode = 200;
+
+      headers = defaultCorsHeaders;
+
+      headers['Content-Type'] = 'text/json';
+
+      response.writeHead(statusCode, headers);
+
+      // We should respond with the messages.
+      response.end(JSON.stringify(messages));
+    }
+  } else if (request.method === 'POST') {
+    var requestBody = '';
+
+    request.on('data', function(data) {
+      requestBody += data;
+
+      messages.results.unshift(JSON.parse(data));
+
+      if (requestBody.length > 1e7) {
+        response.writeHead(413, 'Request Entity Too Large', {'Content-Type': 'text/html'});
+
+        response.end('<!doctype html><html><head><title>413</title></head><body>413: Request Entity Too Large</body></html>');
+      }
+    });
+
+    request.on('end', function() {
+      headers = defaultCorsHeaders;
+
+      headers['Content-Type'] = 'text/json';
+
+      response.writeHead(201, headers);
+
+      objectId += 1;
+
+      var responseObject = {
+        objectId: objectId,
+        createAt: new Date()
+      };
+
+      response.end(JSON.stringify(responseObject));
+    });
   }
-
-
 };
 
 exports.requestHandler = handleRequest;
