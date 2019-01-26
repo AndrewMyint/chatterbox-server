@@ -34,7 +34,8 @@ describe('server', function() {
   });
 
   it('should accept POST requests to /classes/messages', function(done) {
-    var requestParams = {method: 'POST',
+    var requestParams = {
+      method: 'POST',
       uri: 'http://127.0.0.1:3000/classes/messages',
       json: {
         username: 'Jono',
@@ -48,7 +49,8 @@ describe('server', function() {
   });
 
   it('should respond with messages that were previously posted', function(done) {
-    var requestParams = {method: 'POST',
+    var requestParams = {
+      method: 'POST',
       uri: 'http://127.0.0.1:3000/classes/messages',
       json: {
         username: 'Jono',
@@ -73,5 +75,33 @@ describe('server', function() {
     });
   });
 
+  it('Should 405 when asked for a nonexistent method', function(done) {
+    var requestParams = {method: 'DELETE',
+      uri: 'http://127.0.0.1:3000/classes/messages',
+    };
 
+    request(requestParams, function(error, response, body) {
+      expect(response.statusCode).to.equal(405);
+      done();
+    });
+  });
+
+  it('Should send an object containing an `objectId` and `createdAt` properties', function(done) {
+    console.log('We got here!');
+    var requestParams = {
+      method: 'POST',
+      uri: 'http://127.0.0.1:3000/classes/messages',
+      json: {
+        username: 'Jono',
+        text: 'Do my bidding!'}
+    };
+
+    request(requestParams, function(error, response, body) {
+      expect(body).to.be.an('object');
+      expect(body).to.have.property('objectId');
+      expect(body).to.have.property('createdAt');
+      done();
+    });
+  });
 });
+
