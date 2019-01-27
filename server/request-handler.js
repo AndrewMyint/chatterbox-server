@@ -30,11 +30,9 @@ var handleRequest = function (request, response) {
     'access-control-max-age': 10 // Seconds.
   };
 
-  var headers;
+  var headers = defaultCorsHeaders;
 
   if (request.method === 'OPTIONS') {
-    headers = defaultCorsHeaders;
-
     headers['Content-Type'] = 'text/json';
 
     response.writeHead(200, headers);
@@ -42,8 +40,6 @@ var handleRequest = function (request, response) {
     response.end();
   } else if (request.method === 'GET') {
     if (request.url === '/classes/messages') {
-      headers = defaultCorsHeaders;
-
       headers['Content-Type'] = 'text/json';
 
       response.writeHead(200, headers);
@@ -51,8 +47,6 @@ var handleRequest = function (request, response) {
       // We should respond with the messages.
       response.end(JSON.stringify(messages));
     } else {
-      headers = defaultCorsHeaders;
-
       headers['Content-Type'] = 'text/plain';
 
       response.writeHead(404, headers);
@@ -79,19 +73,15 @@ var handleRequest = function (request, response) {
       messages.results.unshift(newData);
 
       if (requestBody.length > 1e7) {
-        headers = defaultCorsHeaders;
-
         headers['Content-Type'] = 'text/plain';
 
-        response.writeHead(201, headers);
+        response.writeHead(413, headers);
 
         response.end('Request Entity Too Large');
       }
     });
 
     request.on('end', function() {
-      headers = defaultCorsHeaders;
-
       headers['Content-Type'] = 'text/json';
 
       response.writeHead(201, headers);
