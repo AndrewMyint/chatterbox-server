@@ -33,6 +33,6 @@
   "dependencies": {
     "jquery": "^3.3.1",
     "sinon": "^6.3.4",
-    "underscore": "^1.9.1"
+    "underscore": "^1.12.1"
   }
 }
